@@ -1,0 +1,33 @@
+server:
+  port: 8080
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        show_sql: true
+        format_sql: true
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+langchain4j:
+  google-ai-gemini:
+    streaming-chat-model:
+      api-key: ${GEMINI_API_KEY}
+      model-name: ${GEMINI_MODEL}
+      log-requests-and-responses: true
+    chat-model:
+      api-key: ${GEMINI_API_KEY}
+      model-name: ${GEMINI_MODEL}
+      log-requests-and-responses: true
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
