@@ -1,8 +1,8 @@
 package dev.luigi.example.langchain4j.service;
 
+import dev.luigi.example.langchain4j.assistant.Assistant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.bootrestapi.langchain4j.assistant.Assistant;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
