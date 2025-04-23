@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Recipe API Practice</title>
+    <link rel="stylesheet" href="/index.css">
+    <style>
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            margin-right: 5px;
+        }
+
+        .tab.active {
+            background-color: #ddd;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chat-container {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .user-message {
+            background-color: #e1f5fe;
+            padding: 8px 12px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            max-width: 80%;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .assistant-message {
+            background-color: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            max-width: 80%;
+        }
+
+        .chat-input {
+            display: flex;
+        }
+
+        .chat-input textarea {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .chat-input button {
+            padding: 8px 15px;
+        }
+    </style>
+</head>
+<body>
+<h1>Recipe API & LLM Chat Practice</h1>
+
+<div class="tabs">
+    <div class="tab active" onclick="openTab(event, 'recipe-tab')">Recipe API</div>
+    <div class="tab" onclick="openTab(event, 'chat-tab')">LLM Chat</div>
+</div>
+
+<div id="recipe-tab" class="tab-content active">
+    <div class="section">
+        <h2>Get All Recipes</h2>
+        <button onclick="getAllRecipes()">Get All Recipes</button>
+        <div id="getAllResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>Get Recipe by ID</h2>
+        <div class="form-group">
+            <label for="getRecipeId">Recipe ID:</label>
+            <input type="number" id="getRecipeId" placeholder="Enter recipe ID">
+        </div>
+        <button onclick="getRecipeById()">Get Recipe</button>
+        <div id="getByIdResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>Create New Recipe</h2>
+        <div class="form-group">
+            <label for="createName">Name:</label>
+            <input type="text" id="createName" placeholder="Enter recipe name">
+        </div>
+        <div class="form-group">
+            <label for="createDescription">Description:</label>
+            <textarea id="createDescription" rows="4" placeholder="Enter recipe description"></textarea>
+        </div>
+        <button onclick="createRecipe()">Create Recipe</button>
+        <div id="createResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>Update Recipe</h2>
+        <div class="form-group">
+            <label for="updateId">Recipe ID:</label>
+            <input type="number" id="updateId" placeholder="Enter recipe ID">
+        </div>
+        <div class="form-group">
+            <label for="updateName">Name:</label>
+            <input type="text" id="updateName" placeholder="Enter new recipe name">
+        </div>
+        <div class="form-group">
+            <label for="updateDescription">Description:</label>
+            <textarea id="updateDescription" rows="4" placeholder="Enter new recipe description"></textarea>
+        </div>
+        <button onclick="updateRecipe()">Update Recipe</button>
+        <div id="updateResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>Update Recipe Name Only</h2>
+        <div class="form-group">
+            <label for="patchId">Recipe ID:</label>
+            <input type="number" id="patchId" placeholder="Enter recipe ID">
+        </div>
+        <div class="form-group">
+            <label for="patchName">New Name:</label>
+            <input type="text" id="patchName" placeholder="Enter new recipe name">
+        </div>
+        <button onclick="patchRecipeName()">Update Name</button>
+        <div id="patchResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>Delete Recipe</h2>
+        <div class="form-group">
+            <label for="deleteId">Recipe ID:</label>
+            <input type="number" id="deleteId" placeholder="Enter recipe ID">
+        </div>
+        <button onclick="deleteRecipe()">Delete Recipe</button>
+        <div id="deleteResponse" class="response"></div>
+    </div>
+</div>
+
+<div id="chat-tab" class="tab-content">
+    <div class="tabs">
+        <div class="tab active" onclick="openChatTab(event, 'regular-chat')">Regular Chat</div>
+        <div class="tab" onclick="openChatTab(event, 'stream-chat')">Stream Chat</div>
+    </div>
+
+    <div id="regular-chat" class="chat-content active">
+        <div class="chat-container">
+            <h2>Regular Chat</h2>
+            <div id="regular-chat-messages" class="chat-messages"></div>
+            <div class="chat-input">
+                <textarea id="regular-chat-input" placeholder="Type your message here..." rows="3"></textarea>
+                <button onclick="sendRegularChat()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stream-chat" class="chat-content">
+        <div class="chat-container">
+            <h2>Streaming Chat</h2>
+            <div id="stream-chat-messages" class="chat-messages"></div>
+            <div class="chat-input">
+                <textarea id="stream-chat-input" placeholder="Type your message here..." rows="3"></textarea>
+                <button onclick="sendStreamChat()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = '/api/recipes';
+    const LLM_API_URL = '/api/llm';
+
+    // Tab functionality
+    function openTab(evt, tabName) {
+        const tabContents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].classList.remove("active");
+        }
+
+        const tabs = document.getElementsByClassName("tab");
+        for (let i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove("active");
+        }
+
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    // Chat tab functionality
+    function openChatTab(evt, tabName) {
+        const chatContents = document.getElementsByClassName("chat-content");
+        for (let i = 0; i < chatContents.length; i++) {
+            chatContents[i].classList.remove("active");
+        }
+
+        const chatTabs = document.querySelectorAll("#chat-tab .tab");
+        for (let i = 0; i < chatTabs.length; i++) {
+            chatTabs[i].classList.remove("active");
+        }
+
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    // Helper function to display response
+    function displayResponse(elementId, data, isError = false) {
+        const element = document.getElementById(elementId);
+        if (isError) {
+            element.innerHTML = `<div class="error">${data}</div>`;
+        } else {
+            element.innerHTML = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+        }
+    }
+
+    // Helper function to add message to chat
+    function addMessageToChat(containerId, message, isUser = false) {
+        const container = document.getElementById(containerId);
+        const messageDiv = document.createElement('div');
+        messageDiv.className = isUser ? 'user-message' : 'assistant-message';
+        messageDiv.innerHTML = message.replace(/\n/g, '<br>');
+        container.appendChild(messageDiv);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Regular Chat
+    async function sendRegularChat() {
+        const input = document.getElementById('regular-chat-input');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        addMessageToChat('regular-chat-messages', message, true);
+        input.value = '';
+
+        try {
+            const response = await fetch(`${LLM_API_URL}/chat?prompt=${encodeURIComponent(message)}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.text();
+            addMessageToChat('regular-chat-messages', data);
+        } catch (error) {
+            addMessageToChat('regular-chat-messages', `Error: ${error.message}`);
+        }
+    }
+
+    // Stream Chat
+    function sendStreamChat() {
+        const input = document.getElementById('stream-chat-input');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        addMessageToChat('stream-chat-messages', message, true);
+        input.value = '';
+
+        // Create a new message div for the assistant's response
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'assistant-message';
+        document.getElementById('stream-chat-messages').appendChild(messageDiv);
+
+        // Create a text content that will be updated with each chunk
+        let assistantMessage = '';
+
+        // Close any existing EventSource
+        if (window.streamChatSource) {
+            window.streamChatSource.close();
+        }
+
+        // Create a new EventSource for SSE
+        const eventSource = new EventSource(`${LLM_API_URL}/stream-chat?prompt=${encodeURIComponent(message)}`);
+        window.streamChatSource = eventSource;
+
+        // Handle incoming messages
+        eventSource.onmessage = function(event) {
+            // Update the message with the new chunk
+            assistantMessage += event.data;
+            messageDiv.innerHTML = assistantMessage.replace(/\n/g, '<br>');
+            document.getElementById('stream-chat-messages').scrollTop = document.getElementById('stream-chat-messages').scrollHeight;
+        };
+
+        // Handle errors
+        eventSource.onerror = function(error) {
+            eventSource.close();
+            window.streamChatSource = null;
+            if (assistantMessage === '') {
+                addMessageToChat('stream-chat-messages', `Error: Connection failed`);
+            }
+        };
+
+        // Handle stream completion
+        eventSource.addEventListener('complete', function(event) {
+            eventSource.close();
+            window.streamChatSource = null;
+        });
+    }
+
+    // Add event listeners for Enter key in textareas
+    document.getElementById('regular-chat-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendRegularChat();
+        }
+    });
+
+    document.getElementById('stream-chat-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendStreamChat();
+        }
+    });
+
+    // Recipe API functions
+    async function getAllRecipes() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            displayResponse('getAllResponse', data);
+        } catch (error) {
+            displayResponse('getAllResponse', `Error: ${error.message}`, true);
+        }
+    }
+
+    async function getRecipeById() {
+        const id = document.getElementById('getRecipeId').value;
+        if (!id) {
+            displayResponse('getByIdResponse', 'Please enter a recipe ID', true);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            displayResponse('getByIdResponse', data);
+        } catch (error) {
+            displayResponse('getByIdResponse', `Error: ${error.message}`, true);
+        }
+    }
+
+    async function createRecipe() {
+        const name = document.getElementById('createName').value;
+        const description = document.getElementById('createDescription').value;
+
+        if (!name || !description) {
+            displayResponse('createResponse', 'Please enter both name and description', true);
+            return;
+        }
+
+        const recipe = {name, description};
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(recipe)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            displayResponse('createResponse', data);
+
+            // Clear form
+            document.getElementById('createName').value = '';
+            document.getElementById('createDescription').value = '';
+        } catch (error) {
+            displayResponse('createResponse', `Error: ${error.message}`, true);
+        }
+    }
+
+    async function updateRecipe() {
+        const id = document.getElementById('updateId').value;
+        const name = document.getElementById('updateName').value;
+        const description = document.getElementById('updateDescription').value;
+
+        if (!id || !name || !description) {
+            displayResponse('updateResponse', 'Please enter ID, name, and description', true);
+            return;
+        }
+
+        const recipe = {name, description};
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(recipe)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            displayResponse('updateResponse', data);
+        } catch (error) {
+            displayResponse('updateResponse', `Error: ${error.message}`, true);
+        }
+    }
+
+    async function patchRecipeName() {
+        const id = document.getElementById('patchId').value;
+        const name = document.getElementById('patchName').value;
+
+        if (!id || !name) {
+            displayResponse('patchResponse', 'Please enter both ID and name', true);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/${id}/name`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: name
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            displayResponse('patchResponse', data);
+        } catch (error) {
+            displayResponse('patchResponse', `Error: ${error.message}`, true);
+        }
+    }
+
+    async function deleteRecipe() {
+        const id = document.getElementById('deleteId').value;
+
+        if (!id) {
+            displayResponse('deleteResponse', 'Please enter a recipe ID', true);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            displayResponse('deleteResponse', 'Recipe deleted successfully');
+        } catch (error) {
+            displayResponse('deleteResponse', `Error: ${error.message}`, true);
+        }
+    }
+</script>
+</body>
+</html>
